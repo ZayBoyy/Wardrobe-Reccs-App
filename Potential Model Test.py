@@ -48,11 +48,31 @@ history=model.fit(X_train,
     epochs=10,
     batch_size=32)
 
-y_pred = np.argmax(model.predict(X_test), axis=1)
-y_true = np.argmax(y_test, axis=1)
 
 report = classification_report(y_true, y_pred)
 print(report)
+
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Model Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+
+plt.plot(history.history['accuracy'], label='Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Model Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
+
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+y_pred = np.argmax(model.predict(X_test), axis=1)
+y_true = np.argmax(y_test, axis=1)
 
 # Defining class names for Fashion MNIST dataset
 class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',
@@ -69,25 +89,6 @@ sns.heatmap(cm, annot=True, fmt='.2f', cmap='Blues', square=True,
 plt.xlabel('Predicted label')
 plt.ylabel('True label')
 plt.title('Confusion Matrix')
-plt.show()
-
-y_train = to_categorical(y_train)
-y_test = to_categorical(y_test)
-
-plt.plot(history.history['loss'], label='Training Loss')
-plt.plot(history.history['val_loss'], label='Validation Loss')
-plt.title('Model Loss')
-plt.xlabel('Epoch')
-plt.ylabel('Loss')
-plt.legend()
-plt.show()
-
-plt.plot(history.history['accuracy'], label='Accuracy')
-plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
-plt.title('Model Accuracy')
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
-plt.legend()
 plt.show()
 
 misclassified_indices = np.where(y_pred != y_true)[0]
