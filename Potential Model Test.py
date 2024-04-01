@@ -49,8 +49,7 @@ history=model.fit(X_train,
     batch_size=32)
 
 
-report = classification_report(y_true, y_pred)
-print(report)
+
 
 plt.plot(history.history['loss'], label='Training Loss')
 plt.plot(history.history['val_loss'], label='Validation Loss')
@@ -73,6 +72,9 @@ y_test = to_categorical(y_test)
 
 y_pred = np.argmax(model.predict(X_test), axis=1)
 y_true = np.argmax(y_test, axis=1)
+
+report = classification_report(y_true, y_pred)
+print(report)
 
 # Defining class names for Fashion MNIST dataset
 class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',
