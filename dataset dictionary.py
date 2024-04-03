@@ -1,4 +1,32 @@
 import numpy as np
+import keras
+from keras import layers
+from keras import ops
+
+# https://datascience.stackexchange.com/questions/71751/applying-a-keras-model-working-with-greyscale-images-to-rgb-images
+
+num_categories = 11
+num_materials, num_water_resistance, num_silhouettes = 6
+num_warmth = 7
+
+category_input = keras.Input(
+    shape=(num_categories,), name="category"
+)
+material_input = keras.Input(
+    shape=(num_materials,), name="material"
+)  
+water_resistance_input = keras.Input(
+    shape=(num_water_resistance,), name="water_resistance"
+)
+silhouette_input = keras.Input(
+    shape=(num_silhouettes,), name="silhouette"
+)
+warmth_input = keras.Input(
+    shape=(num_warmth,), name="warmth"
+)_input = keras.Input(
+    shape=(num_water_resistance,), name="water_resistance"
+)
+
 
 
 dataset_dictionary = {
@@ -65,4 +93,70 @@ def calculate_color_similarity(color, palette):
     distances = [np.linalg.norm(np.array(color) - np.array(palette_color)) for palette_color in palette]
     return np.mean(distances)
 
-clothing_data['color_similarity_palette1'] = clothing_data['color'].apply(lambda x: calculate_color_similarity(x, preferred_palettes[0]))
+inputs = keras.Input(shape=(784,))
+
+dense = layers.Dense(64, activation="relu")
+x = dense(inputs)
+
+x = layers.Dense(64, activation="relu")(x)
+outputs = layers.Dense(10)(x)
+model = keras.Model(inputs=inputs, outputs=outputs, name="mnist_model")
+model.summary()
+
+(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+
+x_train = x_train.reshape(60000, 784).astype("float32") / 255
+x_test = x_test.reshape(10000, 784).astype("float32") / 255
+
+model.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=keras.optimizers.RMSprop(),
+    metrics=["accuracy"],
+)
+
+history = model.fit(x_train, y_train, batch_size=64, epochs=2, validation_split=0.2)
+
+test_scores = model.evaluate(x_test, y_test, verbose=2)
+print("Test loss:", test_scores[0])
+print("Test accuracy:", test_scores[1])
+
+
+
+
+num_tags = 12  # Number of unique issue tags
+num_words = 10000  # Size of vocabulary obtained when preprocessing text data
+num_departments = 4  # Number of departments for predictions
+
+title_input = keras.Input(
+    shape=(None,), name="title"
+)  # Variable-length sequence of ints
+body_input = keras.Input(shape=(None,), name="body")  # Variable-length sequence of ints
+tags_input = keras.Input(
+    shape=(num_tags,), name="tags"
+)  # Binary vectors of size `num_tags`
+
+# Embed each word in the title into a 64-dimensional vector
+title_features = layers.Embedding(num_words, 64)(title_input)
+# Embed each word in the text into a 64-dimensional vector
+body_features = layers.Embedding(num_words, 64)(body_input)
+
+# Reduce sequence of embedded words in the title into a single 128-dimensional vector
+title_features = layers.LSTM(128)(title_features)
+# Reduce sequence of embedded words in the body into a single 32-dimensional vector
+body_features = layers.LSTM(32)(body_features)
+
+# Merge all available features into a single large vector via concatenation
+x = layers.concatenate([title_features, body_features, tags_input])
+
+# Stick a logistic regression for priority prediction on top of the features
+priority_pred = layers.Dense(1, name="priority")(x)
+# Stick a department classifier on top of the features
+department_pred = layers.Dense(num_departments, name="department")(x)
+
+# Instantiate an end-to-end model predicting both priority and department
+model = keras.Model(
+    inputs=[title_input, body_input, tags_input],
+    outputs={"priority": priority_pred, "department": department_pred},
+)
+
+keras.utils.plot_model(model, "multi_input_and_output_model.png", show_shapes=True)
